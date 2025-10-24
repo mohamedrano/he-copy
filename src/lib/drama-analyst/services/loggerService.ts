@@ -154,11 +154,8 @@ class LoggerService {
       message,
       timestamp: new Date().toISOString(),
       context,
+      source: source ?? "",
     };
-
-    if (source !== undefined) {
-      entry.source = source;
-    }
 
     // Add to buffer
     this.addToBuffer(entry);

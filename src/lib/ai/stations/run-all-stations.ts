@@ -185,21 +185,23 @@ export class AnalysisPipeline {
       }
     };
 
-    const station1Input: Station1Input = {
+    const station1Input: { fullText: string; projectName: string; proseFilePath?: string } = {
       fullText: data.screenplayText,
       projectName: data.context?.title ?? "untitled-project",
+      // لا تضف المفتاح إن لم تكن القيمة موجودة
+      ...((data as any)?.proseFilePath ? { proseFilePath: (data as any).proseFilePath as string } : {}),
     };
     const station1Output = await runStation(1, this.station1, station1Input);
 
     const station2Output = await runStation(2, this.station2, {
       station1Output,
-      fullText: data.screenplayText,
+      fullText: station1Input.fullText,
     });
 
     const station3Output = await runStation(3, this.station3, {
       station1Output,
       station2Output,
-      fullText: data.screenplayText,
+      fullText: station1Input.fullText,
     });
 
     const station4Output = await runStation(4, this.station4, {
@@ -209,7 +211,7 @@ export class AnalysisPipeline {
     const station5Output = await runStation(5, this.station5, {
       conflictNetwork: station3Output.conflictNetwork,
       station4Output,
-      fullText: data.screenplayText,
+      fullText: station1Input.fullText,
     });
 
     const station6Output = await runStation(6, this.station6, {
