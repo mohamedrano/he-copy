@@ -63,15 +63,15 @@ describe('AIAgentOrchestraManager', () => {
 
   beforeEach(async () => {
     vi.resetModules();
-    const module = await import('./orchestration');
-    orchestraManager = (module as any).aiAgentOrchestra;
+    const orchestrationModule = await import('./orchestration');
+    orchestraManager = (orchestrationModule as any).aiAgentOrchestra;
   });
 
   describe('Singleton Pattern', () => {
     it('should return the same instance', async () => {
-      const module = await import('./orchestration');
-      const instance1 = (module as any).aiAgentOrchestra;
-      const instance2 = (module as any).aiAgentOrchestra;
+      const orchestrationModule = await import('./orchestration');
+      const instance1 = (orchestrationModule as any).aiAgentOrchestra;
+      const instance2 = (orchestrationModule as any).aiAgentOrchestra;
 
       expect(instance1).toBe(instance2);
     });
