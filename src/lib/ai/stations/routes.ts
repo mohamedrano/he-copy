@@ -158,7 +158,14 @@ export async function analyzeFullPipeline(input: unknown) {
       language: pipelineInput.language,
     });
 
-    const result = await analysisPipeline.runFullAnalysis(pipelineInput);
+    const normalizedForPipeline = {
+      screenplayText: pipelineInput.screenplayText ?? "",
+      language: pipelineInput.language ?? "ar",
+      context: { title: body.projectName, author: pipelineInput.context?.author, sceneHints: pipelineInput.context?.sceneHints },
+      flags: { runStations: true, fastMode: false },
+      agents: { set: undefined, temperature: 0.2 },
+    };
+    const result = await analysisPipeline.runFullAnalysis(normalizedForPipeline);
 
     return {
       success: true,

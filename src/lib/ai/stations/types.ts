@@ -71,7 +71,6 @@ export const OldPipelineInputSchema = z.object({
 /**
  * نوع TypeScript المستنتج من مخطط Zod (already defined above)
  */
-// export type PipelineInput = z.infer<typeof PipelineInputSchema>; // REMOVED: duplicate
 
 /**
  * مخطط لمخرجات خط الأنابيب
