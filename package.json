@@ -12,7 +12,7 @@
     "build": "NODE_ENV=production next build",
     "build:production": "NODE_ENV=production ESLINT_NO_DEV_ERRORS=true next build",
     "start": "next start",
-    "analyze": "ANALYZE=true npm run build && node scripts/bundle-analysis.js",
+    "analyze": "ANALYZE=true npm run build",
     "lint": "eslint . --ext .ts,.tsx --max-warnings=10",
     "lint:fix": "eslint . --ext .ts,.tsx --fix --max-warnings=10",
     "format": "prettier --write .",
