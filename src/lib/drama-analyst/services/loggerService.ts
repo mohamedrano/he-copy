@@ -11,7 +11,7 @@ export enum LogLevel {
   ERROR = 0,
   WARN = 1,
   INFO = 2,
-  DEBUG = 3
+  DEBUG = 3,
 }
 
 // =====================================================
@@ -45,9 +45,9 @@ class LoggerService {
   constructor() {
     this.config = {
       level: this.getLogLevelFromEnv(),
-      enableConsole: process.env.NODE_ENV !== 'production',
-      enableSentry: process.env.NODE_ENV === 'production',
-      enableAnalytics: process.env.NODE_ENV === 'production'
+      enableConsole: process.env.NODE_ENV !== "production",
+      enableSentry: process.env.NODE_ENV === "production",
+      enableAnalytics: process.env.NODE_ENV === "production",
     };
   }
 
@@ -55,11 +55,18 @@ class LoggerService {
     try {
       const level = process.env.NEXT_PUBLIC_LOG_LEVEL?.toLowerCase();
       switch (level) {
-        case 'error': return LogLevel.ERROR;
-        case 'warn': return LogLevel.WARN;
-        case 'info': return LogLevel.INFO;
-        case 'debug': return LogLevel.DEBUG;
-        default: return process.env.NODE_ENV === 'production' ? LogLevel.WARN : LogLevel.INFO;
+        case "error":
+          return LogLevel.ERROR;
+        case "warn":
+          return LogLevel.WARN;
+        case "info":
+          return LogLevel.INFO;
+        case "debug":
+          return LogLevel.DEBUG;
+        default:
+          return process.env.NODE_ENV === "production"
+            ? LogLevel.WARN
+            : LogLevel.INFO;
       }
     } catch {
       return LogLevel.INFO;
@@ -70,16 +77,20 @@ class LoggerService {
     return level <= this.config.level;
   }
 
-  private formatMessage(level: LogLevel, message: string, context?: any): string {
+  private formatMessage(
+    level: LogLevel,
+    message: string,
+    context?: any
+  ): string {
     const timestamp = new Date().toISOString();
     const levelName = LogLevel[level];
-    const contextStr = context ? ` | ${JSON.stringify(context)}` : '';
+    const contextStr = context ? ` | ${JSON.stringify(context)}` : "";
     return `[${timestamp}] ${levelName}: ${message}${contextStr}`;
   }
 
   private addToBuffer(entry: LogEntry): void {
     this.logs.push(entry);
-    
+
     // Keep only the last N logs
     if (this.logs.length > this.maxLogs) {
       this.logs = this.logs.slice(-this.maxLogs);
@@ -91,17 +102,19 @@ class LoggerService {
 
     try {
       // Import Sentry dynamically to avoid issues if not available
-      import('@sentry/react').then(({ captureMessage, captureException }) => {
-        if (entry.level === LogLevel.ERROR) {
-          if (entry.context instanceof Error) {
-            captureException(entry.context);
-          } else {
-            captureMessage(entry.message, 'error');
+      import("@sentry/react")
+        .then(({ captureMessage, captureException }) => {
+          if (entry.level === LogLevel.ERROR) {
+            if (entry.context instanceof Error) {
+              captureException(entry.context);
+            } else {
+              captureMessage(entry.message, "error");
+            }
           }
-        }
-      }).catch(() => {
-        // Sentry not available, ignore
-      });
+        })
+        .catch(() => {
+          // Sentry not available, ignore
+        });
     } catch {
       // Ignore errors in logging
     }
@@ -112,15 +125,15 @@ class LoggerService {
 
     try {
       // Send to analytics service
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'log', {
-          event_category: 'system',
+      if (typeof window !== "undefined" && (window as any).gtag) {
+        (window as any).gtag("event", "log", {
+          event_category: "system",
           event_label: LogLevel[entry.level],
           value: 1,
           custom_map: {
             message: entry.message,
-            source: entry.source
-          }
+            source: entry.source,
+          },
         });
       }
     } catch {
@@ -128,7 +141,12 @@ class LoggerService {
     }
   }
 
-  private log(level: LogLevel, message: string, context?: any, source?: string): void {
+  private log(
+    level: LogLevel,
+    message: string,
+    context?: any,
+    source?: string
+  ): void {
     if (!this.shouldLog(level)) return;
 
     const entry: LogEntry = {
@@ -136,8 +154,11 @@ class LoggerService {
       message,
       timestamp: new Date().toISOString(),
       context,
-      source
     };
+
+    if (source !== undefined) {
+      entry.source = source;
+    }
 
     // Add to buffer
     this.addToBuffer(entry);
@@ -145,7 +166,7 @@ class LoggerService {
     // Console output (development only)
     if (this.config.enableConsole) {
       const formatted = this.formatMessage(level, message, context);
-      
+
       switch (level) {
         case LogLevel.ERROR:
           console.error(formatted);
@@ -193,7 +214,7 @@ class LoggerService {
 
   getLogs(level?: LogLevel): LogEntry[] {
     if (level !== undefined) {
-      return this.logs.filter(log => log.level === level);
+      return this.logs.filter((log) => log.level === level);
     }
     return [...this.logs];
   }
@@ -222,14 +243,18 @@ const logger = new LoggerService();
 // =====================================================
 
 export const log = {
-  error: (message: string, context?: any, source?: string) => logger.error(message, context, source),
-  warn: (message: string, context?: any, source?: string) => logger.warn(message, context, source),
-  info: (message: string, context?: any, source?: string) => logger.info(message, context, source),
-  debug: (message: string, context?: any, source?: string) => logger.debug(message, context, source),
+  error: (message: string, context?: any, source?: string) =>
+    logger.error(message, context, source),
+  warn: (message: string, context?: any, source?: string) =>
+    logger.warn(message, context, source),
+  info: (message: string, context?: any, source?: string) =>
+    logger.info(message, context, source),
+  debug: (message: string, context?: any, source?: string) =>
+    logger.debug(message, context, source),
   getLogs: (level?: LogLevel) => logger.getLogs(level),
   clearLogs: () => logger.clearLogs(),
   setLevel: (level: LogLevel) => logger.setLevel(level),
-  getConfig: () => logger.getConfig()
+  getConfig: () => logger.getConfig(),
 };
 
 export { LoggerService };

@@ -16,10 +16,7 @@ import {
   type Station3Input,
   type Station3Output,
 } from "./station3-network-builder";
-import {
-  PipelineInputSchema,
-  validateAndNormalizePipelineInput,
-} from "./types";
+import { PipelineInputSchema } from "./types";
 import logger from "../utils/logger";
 import type { StationConfig } from "../core/pipeline/base-station";
 
@@ -133,14 +130,35 @@ export async function analyzeText(input: unknown) {
  */
 export async function analyzeFullPipeline(input: unknown) {
   try {
-    const validatedInput = validateAndNormalizePipelineInput(input);
+    // تطبيع جسم الطلب
+    const body = input as any;
+    const normalized = {
+      screenplayText:
+        body.screenplayText ?? body.text ?? body.script ?? body.fullText ?? "",
+      language: body.language ?? "ar",
+      context: {
+        title: body.title ?? body.projectName,
+        author: body.author,
+        sceneHints: body.sceneHints,
+      },
+      flags: {
+        runStations: body.runStations ?? true,
+        fastMode: body.fastMode ?? false,
+      },
+      agents: {
+        set: body.agentSet,
+        temperature: body.temperature ?? 0.2,
+      },
+    };
+
+    const pipelineInput = PipelineInputSchema.parse(normalized);
 
     logger.info("[API] Full pipeline analysis started", {
-      projectName: validatedInput.projectName,
-      textLength: validatedInput.fullText.length,
+      textLength: pipelineInput.screenplayText.length,
+      language: pipelineInput.language,
     });
 
-    const result = await analysisPipeline.runFullAnalysis(validatedInput);
+    const result = await analysisPipeline.runFullAnalysis(pipelineInput);
 
     return {
       success: true,

@@ -1,24 +1,38 @@
 // src/lib/ai/stations/types.ts
-import { z } from 'zod';
+import { z } from "zod";
 
-/**
- * مخطط Zod للتحقق من مدخلات خط الأنابيب
- * يدعم كل من البنية الجديدة والقديمة للتوافق
- */
 export const PipelineInputSchema = z.object({
-  // النص الرئيسي للتحليل (مطلوب)
-  fullText: z.string().min(1, 'fullText is required'),
+  screenplayText: z.string().min(1),
+  language: z.enum(["ar", "en"]).default("ar"),
+  context: z
+    .object({
+      title: z.string().optional(),
+      author: z.string().optional(),
+      sceneHints: z.array(z.string()).optional(),
+    })
+    .default({}),
+  flags: z
+    .object({
+      runStations: z.boolean().default(true),
+      fastMode: z.boolean().default(false),
+    })
+    .default({}),
+  agents: z
+    .object({
+      set: z.array(z.string()).optional(),
+      temperature: z.number().min(0).max(2).default(0.2),
+    })
+    .default({ temperature: 0.2 }),
+});
 
-  // اسم المشروع (مطلوب)
-  projectName: z.string().min(1, 'projectName is required'),
+export type PipelineInput = z.infer<typeof PipelineInputSchema>;
 
-  // مسار ملف النثر (اختياري)
+// Keep existing types below for compatibility
+export const OldPipelineInputSchema = z.object({
+  fullText: z.string().min(1, "fullText is required"),
+  projectName: z.string().min(1, "projectName is required"),
   proseFilePath: z.string().optional(),
-
-  // لغة النص: افتراضي ar
-  language: z.enum(['ar', 'en']).default('ar'),
-
-  // سياق وميتا بيانات اختيارية
+  language: z.enum(["ar", "en"]).default("ar"),
   context: z
     .object({
       title: z.string().optional(),
@@ -29,8 +43,6 @@ export const PipelineInputSchema = z.object({
     })
     .optional()
     .default({}),
-
-  // أعلام تشغيل المحطات أو الإعدادات
   flags: z
     .object({
       runStations: z.boolean().default(true),
@@ -45,8 +57,6 @@ export const PipelineInputSchema = z.object({
       skipValidation: false,
       verboseLogging: false,
     }),
-
-  // خيارات متقدمة للوكلاء
   agents: z
     .object({
       set: z.array(z.string()).optional(), // مثل: ['characterDeepAnalyzer', ...]
@@ -59,9 +69,9 @@ export const PipelineInputSchema = z.object({
 });
 
 /**
- * نوع TypeScript المستنتج من مخطط Zod
+ * نوع TypeScript المستنتج من مخطط Zod (already defined above)
  */
-export type PipelineInput = z.infer<typeof PipelineInputSchema>;
+// export type PipelineInput = z.infer<typeof PipelineInputSchema>; // REMOVED: duplicate
 
 /**
  * مخطط لمخرجات خط الأنابيب
@@ -89,14 +99,14 @@ export type PipelineRunResult = z.infer<typeof PipelineRunResultSchema>;
 /**
  * حالات المحطات
  */
-export type StationStatus = 'pending' | 'running' | 'completed' | 'error';
+export type StationStatus = "pending" | "running" | "completed" | "error";
 
 /**
  * دالة مساعدة لتطبيع المدخلات من صيغ مختلفة
  * تدعم حقول قديمة مثل screenplayText, text, script
  */
 export function normalizePipelineInput(input: unknown): unknown {
-  if (!input || typeof input !== 'object') {
+  if (!input || typeof input !== "object") {
     return input;
   }
 
@@ -104,16 +114,17 @@ export function normalizePipelineInput(input: unknown): unknown {
 
   return {
     // دعم أسماء بديلة للنص
-    fullText: body.fullText ?? body.screenplayText ?? body.text ?? body.script ?? '',
+    fullText:
+      body.fullText ?? body.screenplayText ?? body.text ?? body.script ?? "",
 
     // اسم المشروع
-    projectName: body.projectName ?? body.project ?? 'untitled-project',
+    projectName: body.projectName ?? body.project ?? "untitled-project",
 
     // مسار النثر
     proseFilePath: body.proseFilePath,
 
     // اللغة
-    language: body.language ?? 'ar',
+    language: body.language ?? "ar",
 
     // السياق
     context: {
@@ -122,7 +133,9 @@ export function normalizePipelineInput(input: unknown): unknown {
       sceneHints: body.sceneHints,
       genre: body.genre,
       description: body.description,
-      ...(typeof body.context === 'object' && body.context !== null ? body.context : {}),
+      ...(typeof body.context === "object" && body.context !== null
+        ? body.context
+        : {}),
     },
 
     // الأعلام
@@ -131,7 +144,9 @@ export function normalizePipelineInput(input: unknown): unknown {
       fastMode: body.fastMode ?? false,
       skipValidation: body.skipValidation ?? false,
       verboseLogging: body.verboseLogging ?? false,
-      ...(typeof body.flags === 'object' && body.flags !== null ? body.flags : {}),
+      ...(typeof body.flags === "object" && body.flags !== null
+        ? body.flags
+        : {}),
     },
 
     // خيارات الوكلاء
@@ -140,7 +155,11 @@ export function normalizePipelineInput(input: unknown): unknown {
       temperature: body.temperature,
       maxTokens: body.maxTokens,
       model: body.model,
-      ...(typeof body.agents === 'object' && body.agents !== null && !Array.isArray(body.agents) ? body.agents : {}),
+      ...(typeof body.agents === "object" &&
+      body.agents !== null &&
+      !Array.isArray(body.agents)
+        ? body.agents
+        : {}),
     },
   };
 }
@@ -148,7 +167,9 @@ export function normalizePipelineInput(input: unknown): unknown {
 /**
  * دالة مساعدة للتحقق والتطبيع في خطوة واحدة
  */
-export function validateAndNormalizePipelineInput(input: unknown): PipelineInput {
+export function validateAndNormalizePipelineInput(
+  input: unknown
+): PipelineInput {
   const normalized = normalizePipelineInput(input);
   return PipelineInputSchema.parse(normalized);
 }

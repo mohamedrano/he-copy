@@ -88,7 +88,7 @@ async function processFile(file: File): Promise<ProcessedFile | null> {
       content: textContent || "",
       sizeBytes: file.size,
       mimeType: file.type,
-      textContent,
+      textContent: textContent || "",
       size: file.size,
       name: file.name,
     };

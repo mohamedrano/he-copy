@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import {
   Station1TextAnalysis,
+  type Station1Input,
   type Station1Output as S1O,
 } from "./station1-text-analysis";
 import {
@@ -152,20 +153,12 @@ export class AnalysisPipeline {
 
   async runFullAnalysis(input: unknown): Promise<PipelineRunResult> {
     // التحقق من المدخلات وتطبيعها باستخدام Zod
-    let validatedInput: PipelineInput;
-    try {
-      validatedInput = validateAndNormalizePipelineInput(input);
-      logger.info("[AnalysisPipeline] Input validated successfully", {
-        projectName: validatedInput.projectName,
-        textLength: validatedInput.fullText.length,
-        language: validatedInput.language,
-      });
-    } catch (error) {
-      logger.error("[AnalysisPipeline] Input validation failed", { error });
-      throw new Error(
-        `فشل التحقق من المدخلات: ${error instanceof Error ? error.message : "خطأ غير معروف"}`
-      );
-    }
+    const data: PipelineInput = PipelineInputSchema.parse(input);
+
+    logger.info("[AnalysisPipeline] Input validated successfully", {
+      textLength: data.screenplayText.length,
+      language: data.language,
+    });
 
     const startedAt = Date.now();
     let stationsCompleted = 0;
@@ -192,24 +185,21 @@ export class AnalysisPipeline {
       }
     };
 
-    const station1Input = {
-      fullText: validatedInput.fullText,
-      projectName: validatedInput.projectName,
-      ...(validatedInput.proseFilePath && {
-        proseFilePath: validatedInput.proseFilePath,
-      }),
+    const station1Input: Station1Input = {
+      fullText: data.screenplayText,
+      projectName: data.context?.title ?? "untitled-project",
     };
     const station1Output = await runStation(1, this.station1, station1Input);
 
     const station2Output = await runStation(2, this.station2, {
       station1Output,
-      fullText: validatedInput.fullText,
+      fullText: data.screenplayText,
     });
 
     const station3Output = await runStation(3, this.station3, {
       station1Output,
       station2Output,
-      fullText: validatedInput.fullText,
+      fullText: data.screenplayText,
     });
 
     const station4Output = await runStation(4, this.station4, {
@@ -219,7 +209,7 @@ export class AnalysisPipeline {
     const station5Output = await runStation(5, this.station5, {
       conflictNetwork: station3Output.conflictNetwork,
       station4Output,
-      fullText: validatedInput.fullText,
+      fullText: data.screenplayText,
     });
 
     const station6Output = await runStation(6, this.station6, {
