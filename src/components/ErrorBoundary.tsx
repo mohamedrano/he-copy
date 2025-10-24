@@ -37,7 +37,7 @@ class ErrorBoundary extends React.Component<
   }
 
   resetError = () => {
-    this.setState({ hasError: false, error: undefined });
+    this.setState({ hasError: false });
   };
 
   render() {
@@ -117,5 +117,10 @@ function DefaultErrorFallback({
 }
 
 export default Sentry.withErrorBoundary(ErrorBoundary, {
-  fallback: DefaultErrorFallback,
+  fallback: (errorData) => (
+    <DefaultErrorFallback
+      error={errorData.error instanceof Error ? errorData.error : new Error(String(errorData.error))}
+      resetError={errorData.resetError}
+    />
+  ),
 });

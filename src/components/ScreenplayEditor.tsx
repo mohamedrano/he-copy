@@ -57,7 +57,7 @@ class ScreenplayClassifier {
       '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
       '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
     };
-    return s.replace(/[٠٢٣٤٥٦٧٨٩]/g, char => map[char]);
+    return s.replace(/[٠٢٣٤٥٦٧٨٩]/g, char => map[char] || char);
   }
 
   static stripTashkeel(s: string): string {
@@ -76,7 +76,7 @@ class ScreenplayClassifier {
 
   static textInsideParens(s: string): string {
     const match = s.match(/^\s*\((.*?)\)\s*$/);
-    return match ? match[1] : '';
+    return match ? (match[1] || '') : '';
   }
 
   static hasSentencePunctuation(s: string): boolean {
@@ -441,11 +441,11 @@ export default function ScreenplayEditor({ onBack }: ScreenplayEditorProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Tab') {
       e.preventDefault();
-      const nextFormat = getNextFormatOnTab(currentFormat, e.shiftKey);
+      const nextFormat = getNextFormatOnTab(currentFormat, e.shiftKey) || 'action';
       applyFormatToCurrentLine(nextFormat);
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      const nextFormat = getNextFormatOnEnter(currentFormat);
+      const nextFormat = getNextFormatOnEnter(currentFormat) || 'action';
       applyFormatToCurrentLine(nextFormat);
     } else if (e.ctrlKey || e.metaKey) {
       switch (e.key) {
@@ -544,7 +544,7 @@ export default function ScreenplayEditor({ onBack }: ScreenplayEditorProps) {
         const bulletCharacterPattern = /^\s*[•·●○■▪▫–—‣⁃]([^:]+):(.*)/;
         const match = textContent.match(bulletCharacterPattern);
         
-        if (match) {
+        if (match && match[1] && match[2]) {
           const characterName = match[1].trim();
           const dialogueText = match[2].trim();
           
@@ -1344,7 +1344,7 @@ export default function ScreenplayEditor({ onBack }: ScreenplayEditorProps) {
               <button 
                 onClick={() => {
                   if (searchTerm && editorRef.current) {
-                    window.find(searchTerm);
+                    (window as any).find?.(searchTerm);
                   }
                   setShowSearchDialog(false);
                 }}
@@ -1585,7 +1585,7 @@ const SceneHeaderAgent = (line: string, ctx: any, getFormatStylesFn: (formatType
   // Check for scene header with number and optional time/location info
   const m2 = trimmedLine.match(/^(مشهد\s*\d+)\s*[-–—:،]?\s*(.*)$/i);
   
-  if (m2) {
+  if (m2 && m2[1] && m2[2]) {
     const head = m2[1].trim(); // "مشهد 1"
     const rest = m2[2].trim(); // "ليل-داخلي" or similar
     

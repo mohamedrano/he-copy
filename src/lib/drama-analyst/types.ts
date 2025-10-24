@@ -3,6 +3,7 @@ export interface ProcessedFile {
   textContent: string;
   size: number;
   sizeBytes: number;
+  name?: string;
 }
 
 export interface AIRequest {
@@ -10,11 +11,13 @@ export interface AIRequest {
   prompt: string;
   files: ProcessedFile[];
   params: any;
+  parameters?: any;
 }
 
 export interface AIResponse {
   raw?: string;
   parsed?: any;
+  agent?: string;
 }
 
 export interface Result<T> {
@@ -28,3 +31,29 @@ export interface Result<T> {
 }
 
 export type AgentId = string;
+
+export interface AIAgentCapabilities {
+  canAnalyze?: boolean;
+  canGenerate?: boolean;
+  canTransform?: boolean;
+  canPredict?: boolean;
+  requiresContext?: boolean;
+  multiModal?: boolean;
+  requiresFiles?: boolean;
+  outputType?: string;
+}
+
+export interface AIAgentConfig {
+  id: string;
+  name: string;
+  description?: string;
+  type: string;
+  capabilities?: AIAgentCapabilities;
+  dependencies?: string[];
+  collaborators?: string[];
+  enhancedBy?: string[];
+  prompt?: string;
+  systemInstruction?: string;
+  temperature?: number;
+  maxTokens?: number;
+}

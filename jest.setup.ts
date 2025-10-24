@@ -17,4 +17,6 @@ vi.mock("next/navigation", () => ({
 }));
 
 // Mock environment variables
-process.env.NODE_ENV = "test";
+if (process.env.NODE_ENV !== 'test') {
+  process.env.NODE_ENV = 'test';
+}

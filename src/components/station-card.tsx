@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Loader2,
   MinusCircle,
+  type LucideIcon,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -19,11 +20,27 @@ import {
 } from './ui/card';
 import { Progress } from './ui/progress';
 
-const StationCard = ({ station, status, results, isActive }) => {
+interface Station {
+  id: number;
+  name: string;
+  description: string;
+  Icon: LucideIcon;
+}
+
+type Status = 'pending' | 'running' | 'completed' | 'failed';
+
+interface StationCardProps {
+  station: Station;
+  status: Status;
+  results: any;
+  isActive: boolean;
+}
+
+const StationCard = ({ station, status, results, isActive }: StationCardProps) => {
   const { id, name, description, Icon } = station;
   const hasResults = status === 'completed' && results[id];
 
-  const statusIcons = {
+  const statusIcons: Record<Status, JSX.Element> = {
     pending: <MinusCircle className="text-muted-foreground" />,
     running: <Loader2 className="animate-spin text-primary" />,
     completed: <CheckCircle2 className="text-green-500" />,

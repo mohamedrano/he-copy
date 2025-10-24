@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
+// import { withSentryConfig } from "@sentry/nextjs";
 
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE === "true",
@@ -140,10 +140,15 @@ const nextConfig: NextConfig = {
   },
 };
 
+// Sentry configuration temporarily disabled
+// Uncomment when SENTRY credentials are available
+/*
+const shouldUseSentry = process.env.SENTRY_ORG && process.env.SENTRY_PROJECT;
+
 const sentryConfig = {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
-  silent: !process.env.CI,
+  silent: true,
   widenClientFileUpload: true,
   reactComponentAnnotation: {
     enabled: true,
@@ -151,6 +156,10 @@ const sentryConfig = {
   hideSourceMaps: true,
   disableLogger: true,
   automaticVercelMonitors: true,
+  sourcemaps: {
+    disable: true,
+  },
 };
+*/
 
-export default withSentryConfig(withBundleAnalyzer(nextConfig), sentryConfig);
+export default withBundleAnalyzer(nextConfig);

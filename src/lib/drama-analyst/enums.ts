@@ -19,5 +19,19 @@ export enum TaskType {
   PRODUCIBILITY_ANALYZER = 'producibility_analyzer',
   TARGET_AUDIENCE_ANALYZER = 'target_audience_analyzer',
   LITERARY_QUALITY_ANALYZER = 'literary_quality_analyzer',
-  RECOMMENDATIONS_GENERATOR = 'recommendations_generator'
+  RECOMMENDATIONS_GENERATOR = 'recommendations_generator',
+  RHYTHM_MAPPING = 'rhythm_mapping',
+  CHARACTER_NETWORK = 'character_network',
+  DIALOGUE_FORENSICS = 'dialogue_forensics',
+  THEMATIC_MINING = 'thematic_mining',
+  STYLE_FINGERPRINT = 'style_fingerprint',
+  CONFLICT_DYNAMICS = 'conflict_dynamics',
+  ADAPTIVE_REWRITING = 'adaptive_rewriting',
+  SCENE_GENERATOR = 'scene_generator',
+  CHARACTER_VOICE = 'character_voice',
+  WORLD_BUILDER = 'world_builder',
+  PLOT_PREDICTOR = 'plot_predictor',
+  TENSION_OPTIMIZER = 'tension_optimizer',
+  AUDIENCE_RESONANCE = 'audience_resonance',
+  PLATFORM_ADAPTER = 'platform_adapter'
 }

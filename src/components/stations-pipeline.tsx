@@ -83,8 +83,8 @@ const StationsPipeline = () => {
   const [statuses, setStatuses] = useState(
     Array(stations.length).fill("pending")
   );
-  const [activeStation, setActiveStation] = useState(null);
-  const [errorMessage, setErrorMessage] = useState(null);
+  const [activeStation, setActiveStation] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
@@ -137,11 +137,11 @@ const StationsPipeline = () => {
           title: "اكتمل التحليل",
           description: "لقد عالجت جميع المحطات النص بنجاح.",
         });
-      } catch (error) {
-        setErrorMessage(`فشل التحليل: ${error.message}`);
+      } catch (error: any) {
+        setErrorMessage(`فشل التحليل: ${error?.message || 'خطأ غير معروف'}`);
         toast({
           title: "فشل التحليل",
-          description: error.message,
+          description: error?.message || 'خطأ غير معروف',
           variant: "destructive",
         });
       }
