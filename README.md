@@ -62,7 +62,7 @@ npm run test:all         # Run both unit and E2E tests
 
 ## Build & Deploy
 
-### Development
+
 
 ```bash
 npm run build            # Build for development
