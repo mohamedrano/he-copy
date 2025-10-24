@@ -67,9 +67,9 @@ describe('AgentFactory', () => {
 
   beforeEach(async () => {
     vi.resetModules();
-    const module = await import('./agentFactory');
-    getAgentConfig = module.getAgentConfig;
-    listAgentConfigs = module.listAgentConfigs;
+    const agentFactoryModule = await import('./agentFactory');
+    getAgentConfig = agentFactoryModule.getAgentConfig;
+    listAgentConfigs = agentFactoryModule.listAgentConfigs;
   });
 
   describe('getAgentConfig', () => {
