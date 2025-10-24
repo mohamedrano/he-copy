@@ -11,14 +11,14 @@ import { z } from "zod";
 // Server-side only environment variables (never exposed to browser)
 const serverSchema = z.object({
   // Gemini API Keys - Server-side only for security
-  GEMINI_API_KEY: z
-    .string()
-    .min(1, "GEMINI_API_KEY is required for server operations"),
   GEMINI_API_KEY_STAGING: z.string().optional(),
   GEMINI_API_KEY_PROD: z.string().optional(),
 
-  // Firebase server-side configuration (for CI/CD and server operations)
-  FIREBASE_PROJECT_ID: z.string().optional(),
+  // Sentry server configuration
+  SENTRY_DSN: z.string().optional(),
+  SENTRY_ORG: z.string().optional(),
+  SENTRY_PROJECT: z.string().optional(),
+  SENTRY_AUTH_TOKEN: z.string().optional(),
 
   // Node environment
   NODE_ENV: z
@@ -28,46 +28,12 @@ const serverSchema = z.object({
 
 // Client-side safe environment variables (prefixed with NEXT_PUBLIC_)
 const clientSchema = z.object({
-  // Firebase client configuration - safe for browser
-  NEXT_PUBLIC_FIREBASE_API_KEY: z
-    .string()
-    .min(1, "Firebase API Key is required"),
-  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: z
-    .string()
-    .min(1, "Firebase Auth Domain is required"),
-  NEXT_PUBLIC_FIREBASE_PROJECT_ID: z
-    .string()
-    .min(1, "Firebase Project ID is required"),
-  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: z
-    .string()
-    .min(1, "Firebase Storage Bucket is required"),
-  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z
-    .string()
-    .min(1, "Firebase Messaging Sender ID is required"),
-  NEXT_PUBLIC_FIREBASE_APP_ID: z.string().min(1, "Firebase App ID is required"),
+  // Application environment
+  NEXT_PUBLIC_APP_ENV: z
+    .enum(["development", "staging", "production"])
+    .default("staging"),
 
-  // Application configuration
-  NEXT_PUBLIC_APP_VERSION: z.string().default("1.0.0"),
-  NEXT_PUBLIC_LOG_LEVEL: z
-    .enum(["debug", "info", "warn", "error"])
-    .default("info"),
-
-  // Backend configuration
-  NEXT_PUBLIC_BACKEND_URL: z.string().url().optional(),
-  NEXT_PUBLIC_USE_BACKEND: z
-    .string()
-    .transform((val) => val === "true")
-    .default("false"),
-  NEXT_PUBLIC_FALLBACK_DIRECT: z
-    .string()
-    .transform((val) => val === "true")
-    .default("true"),
-
-  // Gemini model configuration (client-safe)
-  NEXT_PUBLIC_GEMINI_MODEL: z.string().default("gemini-2.0-flash-exp"),
-
-  // Optional analytics configuration
-  NEXT_PUBLIC_GA4_MEASUREMENT_ID: z.string().optional(),
+  // Sentry client configuration
   NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
 });
 
@@ -115,7 +81,12 @@ function validateEnvironment() {
     // Security check: Ensure no server secrets leaked to browser
     const dangerousVars = Object.keys(process.env).filter(
       (key) =>
-        key.startsWith("GEMINI_API_KEY") && !key.startsWith("NEXT_PUBLIC_")
+        (key.startsWith("GEMINI_API_KEY") ||
+          key === "SENTRY_DSN" ||
+          key === "SENTRY_ORG" ||
+          key === "SENTRY_PROJECT" ||
+          key === "SENTRY_AUTH_TOKEN") &&
+        !key.startsWith("NEXT_PUBLIC_")
     );
 
     if (dangerousVars.length > 0) {
@@ -153,14 +124,11 @@ function validateEnvironment() {
  * Get the appropriate Gemini API key based on environment
  */
 function getGeminiApiKey(serverEnv: z.infer<typeof serverSchema>): string {
-  switch (serverEnv.NODE_ENV) {
-    case "production":
-      return serverEnv.GEMINI_API_KEY_PROD || serverEnv.GEMINI_API_KEY;
-    case "test":
-      return serverEnv.GEMINI_API_KEY_STAGING || serverEnv.GEMINI_API_KEY;
-    default:
-      return serverEnv.GEMINI_API_KEY;
+  // In production (main branch), use PROD key, otherwise use STAGING key
+  if (serverEnv.NODE_ENV === "production") {
+    return serverEnv.GEMINI_API_KEY_PROD || "";
   }
+  return serverEnv.GEMINI_API_KEY_STAGING || "";
 }
 
 // Validate environment on module load
@@ -190,21 +158,10 @@ export const isSecureContext = () => {
   return typeof window === "undefined" || window.isSecureContext;
 };
 
-// Firebase configuration getter (client-safe)
-export const getFirebaseConfig = () => ({
-  apiKey: clientEnv.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: clientEnv.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: clientEnv.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: clientEnv.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: clientEnv.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: clientEnv.NEXT_PUBLIC_FIREBASE_APP_ID,
-});
-
 // Environment info for debugging (safe for client)
 export const getEnvironmentInfo = () => ({
   nodeEnv: typeof window !== "undefined" ? "client" : serverEnv.NODE_ENV,
-  appVersion: clientEnv.NEXT_PUBLIC_APP_VERSION,
-  logLevel: clientEnv.NEXT_PUBLIC_LOG_LEVEL,
+  appEnv: clientEnv.NEXT_PUBLIC_APP_ENV,
   isProduction:
     typeof window === "undefined" ? serverEnv.NODE_ENV === "production" : false,
   timestamp: new Date().toISOString(),

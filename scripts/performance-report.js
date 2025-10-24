@@ -21,10 +21,11 @@ function generatePerformanceReport() {
       status: "pending",
     },
     webVitals: {
-      fcp: { target: "<1.8s", status: "pending" },
-      lcp: { target: "<2.5s", status: "pending" },
-      cls: { target: "<0.1", status: "pending" },
-      fid: { target: "<100ms", status: "pending" },
+      fcp: { target: "<1.8s", actual: null, status: "pending" },
+      lcp: { target: "<2.5s", actual: null, status: "pending" },
+      cls: { target: "<0.1", actual: null, status: "pending" },
+      fid: { target: "<100ms", actual: null, status: "pending" },
+      ttfb: { target: "<600ms", actual: null, status: "pending" },
     },
     e2eTests: {
       status: "pending",
@@ -70,6 +71,36 @@ function generatePerformanceReport() {
     }
   }
 
+  // Check Web Vitals from Sentry or other sources if available
+  const webVitalsFile = path.join(reportsDir, "web-vitals.json");
+  if (fs.existsSync(webVitalsFile)) {
+    try {
+      const vitals = JSON.parse(fs.readFileSync(webVitalsFile, "utf8"));
+      if (vitals.lcp) {
+        report.webVitals.lcp.actual = `${(vitals.lcp / 1000).toFixed(2)}s`;
+        report.webVitals.lcp.status = vitals.lcp <= 2500 ? "passed" : "failed";
+      }
+      if (vitals.fcp) {
+        report.webVitals.fcp.actual = `${(vitals.fcp / 1000).toFixed(2)}s`;
+        report.webVitals.fcp.status = vitals.fcp <= 1800 ? "passed" : "failed";
+      }
+      if (vitals.cls) {
+        report.webVitals.cls.actual = vitals.cls.toFixed(3);
+        report.webVitals.cls.status = vitals.cls <= 0.1 ? "passed" : "failed";
+      }
+      if (vitals.fid) {
+        report.webVitals.fid.actual = `${vitals.fid}ms`;
+        report.webVitals.fid.status = vitals.fid <= 100 ? "passed" : "failed";
+      }
+      if (vitals.ttfb) {
+        report.webVitals.ttfb.actual = `${vitals.ttfb}ms`;
+        report.webVitals.ttfb.status = vitals.ttfb <= 600 ? "passed" : "failed";
+      }
+    } catch (error) {
+      console.warn("Warning: Could not parse Web Vitals data");
+    }
+  }
+
   const reportFile = path.join(reportsDir, "performance-report.json");
   fs.writeFileSync(reportFile, JSON.stringify(report, null, 2));
 
@@ -79,6 +110,11 @@ function generatePerformanceReport() {
   console.log(`Test Coverage: ${report.testCoverage.status}`);
   console.log(`E2E Tests: ${report.e2eTests.status}`);
   console.log(`Bundle Analysis: ${report.bundleAnalysis.status}`);
+  console.log("\n📈 Web Vitals:");
+  console.log(`  LCP: ${report.webVitals.lcp.actual || 'N/A'} (target: ${report.webVitals.lcp.target})`);
+  console.log(`  FCP: ${report.webVitals.fcp.actual || 'N/A'} (target: ${report.webVitals.fcp.target})`);
+  console.log(`  CLS: ${report.webVitals.cls.actual || 'N/A'} (target: ${report.webVitals.cls.target})`);
+  console.log(`  FID: ${report.webVitals.fid.actual || 'N/A'} (target: ${report.webVitals.fid.target})`);
 }
 
 generatePerformanceReport();
